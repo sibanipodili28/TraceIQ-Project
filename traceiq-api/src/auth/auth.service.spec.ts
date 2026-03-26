@@ -1,18 +1,23 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
+// auth.service.ts
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+// import { UserService } from "../user/user.service";
 
-describe('AuthService', () => {
-  let service: AuthService;
+@Injectable()
+export class AuthService {
+  constructor(
+    private jwtService: JwtService,
+    // private userService: UserService
+  ) {}
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService],
-    }).compile();
+  async validateUser(profile: any) {
+    // return this.userService.findOrCreate(profile);
+  }
 
-    service = module.get<AuthService>(AuthService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+  async generateJwt(user: any) {
+    return this.jwtService.sign({
+      githubId: user.githubId,
+      username: user.username,
+    });
+  }
+}

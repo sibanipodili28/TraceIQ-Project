@@ -1,8 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AuthService } from './auth.service';
+// auth.controller.ts
+import {
+  Controller,
+  Get,
+  Req,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { AuthService } from "./auth.service";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
-   
+  constructor(private authService: AuthService) {}
+
+  @Get("github")
+  @UseGuards(AuthGuard("github"))
+  async githubAuth() {}
+
+  @Get("github/callback")
+  @UseGuards(AuthGuard("github"))
+  async githubCallback(@Req() req, @Res() res) {
+    // const user = await this.authService.validateUser(req.user);
+    // const token = await this.authService.generateJwt(user);
+
+    res.redirect(
+      // `${process.env.FRONTEND_URL}/dashboard?token=${token}`
+    );
+  }
 }
