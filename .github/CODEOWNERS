@@ -1,0 +1,8 @@
+# Default reviewer for all files
+* @balkrishnaravada
+
+# Frontend
+/traceiq-app/ @balkrishnaravada
+
+# Backend
+/traceiq-api/ @balkrishnaravada
