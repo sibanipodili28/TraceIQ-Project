@@ -15,16 +15,19 @@ export class AuthController {
 
   @Get("github")
   @UseGuards(AuthGuard("github"))
-  async githubAuth() {}
+  async githubAuth() {
+    console.log("GitHub auth route hit");
+  }
 
   @Get("github/callback")
   @UseGuards(AuthGuard("github"))
-  async githubCallback(@Req() req, @Res() res) {
-    // const user = await this.authService.validateUser(req.user);
-    // const token = await this.authService.generateJwt(user);
+  async githubCallback(@Req() req:any, @Res() res:any) {
+    console.log("GitHub callback hit with user:", req.user);
+    const user = await this.authService.validateUser(req.user);
+    const token = await this.authService.generateJwt(user);
 
     res.redirect(
-      // `${process.env.FRONTEND_URL}/dashboard?token=${token}`
+      `${process.env.FRONTEND_URL}/dashboard?token=${token}`
     );
   }
 }
