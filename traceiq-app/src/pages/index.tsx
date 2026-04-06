@@ -1,13 +1,11 @@
-
-
-
+import { Box } from "@mui/material";
+import Login from "../components/auth/Login";
 
 export default function Main() {
 
   return (
-    <div>
-      <h1>Welcome to the Main Page</h1>
-      <h1>Welcome to the Main Page</h1>
-    </div>
+    <Box>
+      <Login/>
+    </Box>
   );
 }
