@@ -1,7 +1,7 @@
 import { PlatformBaseModel } from "src/common/models/platform-model";
 
 export interface User extends PlatformBaseModel {
-  githubId: string;
+  gitUserId: string;
   username: string;
   accessToken: string;
 }

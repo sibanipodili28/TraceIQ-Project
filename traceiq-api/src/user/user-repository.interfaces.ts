@@ -1,6 +1,7 @@
 import { User } from "./user.model";
 
 export interface IUserRepository {
-  findOrCreate(profile: any): Promise<User>;
-  isUserExists(githubId: string): Promise<User | null>;
+  saveUser(profile: any): Promise<User>;
+  isUserExists(gitUserId: string): Promise<User | null>;
+  getUsers(gitUserId?: string): Promise<User[]>;
 }
