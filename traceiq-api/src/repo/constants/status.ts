@@ -1,0 +1,6 @@
+export const REPO_STATUS = {
+    INSERTED:"INSERTED",
+    SKIPPED:"SKIPPED",
+    UPDATED:"UPDATED",
+    FAILED:"FAILED",
+}

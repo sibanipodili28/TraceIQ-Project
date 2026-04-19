@@ -6,7 +6,7 @@ export interface PlatformBaseModel{
     updatedAt?: Date;
     createdBy?: string;
     updatedBy?: string;
-    isActiveVersion: boolean;
+    isActiveVersion?: boolean;
     version?: number;
     isDeleted?: boolean;
 }

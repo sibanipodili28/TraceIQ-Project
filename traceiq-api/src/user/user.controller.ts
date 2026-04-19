@@ -7,6 +7,6 @@ export class UserController {
 
   @Post('login')
   async login(@Body() profile: any) {
-    return this.userService.findOrCreate(profile);
+    return this.userService.saveUser(profile);
   }
 }
