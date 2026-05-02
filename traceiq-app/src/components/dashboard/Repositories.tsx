@@ -1,41 +1,3 @@
-// // src/pages/repositories/index.tsx
-// import {
-//   Typography,
-//   Card,
-//   CardContent,
-//   Grid,
-//   Button,
-// } from "@mui/material";
-
-// export default function Repositories() {
-//   return (
-//     <>
-//       <Typography variant="h4" mb={3}>
-//         Repositories
-//       </Typography>
-
-//       <Grid container spacing={3}>
-//         {[1, 2, 3].map((repo) => (
-//           <Grid item xs={12} md={4} key={repo}>
-//             <Card>
-//               <CardContent>
-//                 <Typography variant="h6">Repo {repo}</Typography>
-//                 <Typography variant="body2">
-//                   Description of repo
-//                 </Typography>
-
-//                 <Button sx={{ mt: 2 }} variant="contained">
-//                   Analyze
-//                 </Button>
-//               </CardContent>
-//             </Card>
-//           </Grid>
-//         ))}
-//       </Grid>
-//     </>
-//   );
-// }
-
 "use client";
 
 import {
@@ -46,123 +8,146 @@ import {
   Button,
   CircularProgress,
   Box,
+  Select,
+  MenuItem,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-interface Repo {
+type Branch = {
   name: string;
-  clone_url: string;
-  private: boolean;
-}
+};
 
-export default function Repositories() {
-  const [repos, setRepos] = useState<Repo[]>([]);
-  const [loading, setLoading] = useState(true);
+type Repo = {
+  githubRepoId: string;
+  fullName: string;
+  branches: Branch[];
+};
 
-  const fetchRepos = async () => {
-    try {
-      const token = localStorage.getItem("token");
+type Props = {
+  repos: Repo[];
+  loading: boolean;
+  onRefresh: () => void;
+};
 
-      // ✅ Safety check
-      console.log("Fetching repos with token:", token);
-      if (!token) {
-        console.error("No GitHub token found in localStorage");
-        setLoading(false);
-        return;
-      }
+export default function Repositories({
+  repos,
+  loading,
+}: Props) {
+  const [selectedBranches, setSelectedBranches] = useState<{
+    [key: string]: string;
+  }>({});
 
-      const res = await fetch("http://localhost:3000/api/repo/github", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ FIXED
-        },
-      });
+  const [analyzingRepo, setAnalyzingRepo] = useState<string | null>(null);
 
-      const data = await res.json();
+  // ✅ FILTER: only repos with branches
+  const validRepos = repos.filter(
+    (repo) => repo.branches && repo.branches.length > 0
+  );
 
-      console.log("API DATA:", data);
-
-      // ✅ Ensure array
-      if (Array.isArray(data)) {
-        setRepos(data);
-      } else {
-        console.error("Invalid response:", data);
-        setRepos([]);
-      }
-    } catch (error) {
-      console.error("Error fetching repos:", error);
-      setRepos([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleBranchChange = (repoId: string, branch: string) => {
+    setSelectedBranches((prev) => ({
+      ...prev,
+      [repoId]: branch,
+    }));
   };
 
-  useEffect(() => {
-    fetchRepos();
-  }, []);
+  return (
+  <>
+    <Typography variant="h4" mb={2}>
+      Repositories
+    </Typography>
 
-  // ✅ Loading UI
-  if (loading) {
-    return (
+    {loading ? (
       <Box display="flex" justifyContent="center" mt={5}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  return (
-    <>
-      <Typography variant="h4" mb={3}>
-        Repositories
-      </Typography>
-
-      <Grid container spacing={3}>
-        {repos.length === 0 ? (
-          <Typography>No repositories found</Typography>
+    ) : (
+      <Box>
+        <Grid container spacing={1.5}>
+        {validRepos.length === 0 ? (
+          <Typography>No repositories with branches found</Typography>
         ) : (
-          repos.map((repo) => (
-            <Grid item xs={12} sm={6} md={4} key={repo.name}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6">{repo.name}</Typography>
-
-                  <Typography variant="body2" color="text.secondary">
-                    {repo.private ? "Private Repository" : "Public Repository"}
-                  </Typography>
-
-                  <Button
-                    sx={{ mt: 2 }}
-                    variant="contained"
-                    onClick={() => handleAnalyze(repo.clone_url)}
+          validRepos.map((repo) => (
+            <Grid item xs={12} key={repo.githubRepoId}>
+              <Card
+                sx={{
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  px: 2,
+                }}
+              >
+                <CardContent
+                  sx={{
+                    width: "100%",
+                    p: "6px !important",
+                  }}
+                >
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
                   >
-                    Analyze
-                  </Button>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        maxWidth: "60%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {repo.fullName}
+                    </Typography>
+
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <Select
+                        size="small"
+                        value={
+                          selectedBranches[repo.githubRepoId] ||
+                          repo.branches[0]?.name
+                        }
+                        onChange={(e) =>
+                          handleBranchChange(
+                            repo.githubRepoId,
+                            e.target.value as string
+                          )
+                        }
+                        sx={{
+                          width: 150,
+                          height: 28,
+                        }}
+                      >
+                        {repo.branches.map((branch) => (
+                          <MenuItem key={branch.name} value={branch.name}>
+                            {branch.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          height: 28,
+                          minWidth: 100,
+                        }}
+                        disabled={analyzingRepo === repo.githubRepoId}
+                      >
+                        {analyzingRepo === repo.githubRepoId
+                          ? "Analyzing..."
+                          : "Analyze"}
+                      </Button>
+                    </Box>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
           ))
         )}
-      </Grid>
-    </>
-  );
+        </Grid>
+      </Box>
+    )}
+  </>
+);
 }
-
-// ✅ Separate function (clean code)
-const handleAnalyze = async (cloneUrl: string) => {
-  try {
-    const res = await fetch("http://localhost:3000/api/repo/clone", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ clone_url: cloneUrl }),
-    });
-
-    const data = await res.json();
-
-    alert(data.message || "Repo cloned successfully");
-  } catch (error) {
-    console.error("Clone error:", error);
-    alert("Failed to clone repo");
-  }
-};

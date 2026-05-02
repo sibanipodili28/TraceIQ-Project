@@ -54,6 +54,8 @@ export class RepoService {
         const mappedRepos=this.repoMapper._githubReposMapper(userRepos, user.gitUserId);
         results.totalRepos?.push({userId:user.gitUserId, count: mappedRepos.length});
         for(const repo of mappedRepos){{
+          const branchDetails=await this.githubService.fetchBranches(repo.fullName.split("/")[0], repo.name, user.accessToken);
+          repo.branches=this.repoMapper._repoBranchMapper(branchDetails, repo.default_branch);
           const response=await this.repoRepository.saveRepo(repo);
           if(response.status===REPO_STATUS.INSERTED){
             results.inserted++;
