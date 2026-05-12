@@ -16,12 +16,37 @@ export class RepoRepository implements IRepoRepository {
   }
 
   async getRepos(userId: string): Promise<RepoDto[]> {
+    console.log("Fetching repos for user:", userId);
     const filter = {
       gitUserId: userId,
       isActiveVersion: true,
       isDeleted: false,
     };
-    const result=await this.collection.find(filter).toArray();
+    const projection = {
+      githubRepoId: 1,
+      gitUserId: 1,
+      fullName: 1,
+      branches:1
+    }
+    const result=await this.collection.find(filter,{projection}).toArray();
+    return result;
+  }
+
+  async fetchRepo(userId: string,repoId:string): Promise<any> {
+    console.log("Fetching repos for user:", userId);
+    const filter = {
+      gitUserId: userId,
+      githubRepoId: repoId,
+      isActiveVersion: true,
+      isDeleted: false,
+    };
+    const projection = {
+      githubRepoId: 1,
+      gitUserId: 1,
+      fullName: 1,
+      branches:1
+    }
+    const result= this.collection.find(filter,{projection});
     return result;
   }
 
@@ -46,7 +71,18 @@ export class RepoRepository implements IRepoRepository {
       isDeleted: false,
       isActiveVersion: true,
       }; 
-    const existing = await this.collection.findOne(filter);
+    let branchesUpdate=false;
+     const existing = await this.collection.findOne(filter);
+
+        if(existing ){
+          const { branches, hasChanges } = this._mergeBranches(
+            existing.branches || [],
+            repo.branches|| [],
+          );
+         repo.branches = branches;
+         branchesUpdate=hasChanges;
+        }
+
         if (!existing) {
           await this.collection.insertOne({
             ...repo,
@@ -54,13 +90,13 @@ export class RepoRepository implements IRepoRepository {
             isActiveVersion: true,
             isDeleted: false,
             createdAt: new Date(),
-            updatedAtRecord: new Date(),
+            updatedAt: new Date(),
           }); 
           return{
             status: REPO_STATUS.INSERTED,
           }
         }
-        else if (existing.hashCode === repo.hashCode) {
+        else if (existing.hashCode === repo.hashCode && !branchesUpdate) {
           return{
             status: REPO_STATUS.SKIPPED,
           }
@@ -71,7 +107,7 @@ export class RepoRepository implements IRepoRepository {
             {
               $set: {
                 isActiveVersion: false,
-                updatedAtRecord: new Date(),
+                updatedAt: new Date(),
               },
             }
           );
@@ -82,7 +118,7 @@ export class RepoRepository implements IRepoRepository {
             isActiveVersion: true,
             isDeleted: false,
             createdAt: new Date(),
-            updatedAtRecord: new Date(),
+            updatedAt: new Date(),
           });
           return{
             status: REPO_STATUS.UPDATED,
@@ -99,4 +135,58 @@ export class RepoRepository implements IRepoRepository {
       const count = await this.collection.countDocuments(filter);
       return count > 0;
     }
+
+    _mergeBranches = (
+  existingBranches: any[] = [],
+  newBranches: any[]
+): { branches: any[]; hasChanges: boolean } => {
+  const existingMap = new Map(
+    existingBranches.map((b) => [b.name.toLowerCase(), b])
+  );
+  let hasChanges = false;
+  const mergedBranches = newBranches.map((branch: any) => {
+    const name = branch.name;
+    const newCommitSha = branch.commit.sha;
+    const existing = existingMap.get(name.toLowerCase());
+    if (!existing) {
+      hasChanges = true;
+      return {
+        name,
+        commitSha: newCommitSha,
+        isDefault: branch.isDefault,
+        lastAnalyzedSha: "",
+      };
+    }
+    if (existing.commitSha !== newCommitSha) {
+      hasChanges = true;
+      return {
+        ...existing,
+        commitSha: newCommitSha,
+        isDefault: branch.isDefault,
+      };
+    }
+    return existing;
+  });
+  if (existingBranches.length !== mergedBranches.length) {
+    hasChanges = true;
+  }
+  return {
+    branches: mergedBranches,
+    hasChanges,
+  };
+};
+
+async updateLastAnalyzedSha(repoId: string, branchName: string, sha: string) {
+    await this.collection.updateOne(
+      {
+        githubRepoId: repoId,
+        "branches.name": branchName,
+      },
+      {
+        $set: {
+          "branches.$.lastAnalyzedSha": sha,
+        },
+      }
+    );
+  }
 }

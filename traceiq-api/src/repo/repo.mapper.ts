@@ -1,21 +1,19 @@
 import { generateHash } from "src/common/utils/util.functions";
 import { GithubRepositoryResponseDto } from "./dtos/response/github-repository.response.dto";
 import { RepoDto } from "./dtos/request/repos.request.dto";
+import { last } from "rxjs";
 
 export class RepoMapper {
     _githubReposMapper = (repos: GithubRepositoryResponseDto[], gitUserId: string):RepoDto[]=> {
       return repos.map((repo: GithubRepositoryResponseDto) => {
+        const { id, full_name, ...rest } = repo; 
+        const [_,ownerName]=repo.full_name.split("/");
         const mapped = {
-          githubRepoId: repo.id,
+          githubRepoId: id,
           gitUserId, 
-          name: repo.name,
-          fullName: repo.full_name,
-          private: repo.private,
-          description: repo.description,
-          language: repo.language,  
-          stars: repo.stargazers_count,
-          forks: repo.forks_count,
-          updatedAt: new Date(repo.updated_at),
+          fullName: full_name,
+          ownerName,
+          ...rest,
         };
     
         return {
@@ -23,11 +21,22 @@ export class RepoMapper {
           hashCode: generateHash(mapped),
           version: 1,
           createdAt: new Date(),
-          updatedAtRecord: new Date(),
+          updatedAt: new Date(),
           isActiveVersion: true,
           isDeleted: false,
         };
       });
     };
+
+    _repoBranchMapper=(branches:any[],defaultBranch:string)=>{
+      return branches.map((branch:any)=>{
+        return {
+          name: branch.name,
+          commitSha: branch.commit.sha,
+          isDefault: branch.name === defaultBranch,
+          lastAnalyzedSha: "",
+        }
+      });
+    }
 
 }
