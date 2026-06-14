@@ -1,5 +1,4 @@
 import { PlatformBaseModel } from "@/common/models/platform-model";
-import { Schema } from "mongoose";
 
 export interface Analysis extends PlatformBaseModel
 {

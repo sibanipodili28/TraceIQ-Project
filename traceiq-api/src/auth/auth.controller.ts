@@ -22,6 +22,7 @@ export class AuthController {
   @UseGuards(AuthGuard("github"))
   async githubCallback(@Req() req:any, @Res() res:any) {
     const token = await this.authService.processUserProfile(req.user);
+    console.log("GitHub callback processed, token generated:", token);
     res.redirect(
       `${process.env.FRONTEND_URL}/dashboard?token=${token}`
     );

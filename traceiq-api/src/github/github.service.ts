@@ -35,8 +35,8 @@ export class GithubService {
   return res.data;
   }
 
-  async fetchRepoTree(owner: string, repo: string, token: string,branch:string) {
-  const url = `${process.env.GITHUB_API_BASE_URL}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+  async fetchRepoTree( repo: string,branch:string,token: string) {
+  const url = `${process.env.GITHUB_API_BASE_URL}/repos/${repo}/git/trees/${branch}?recursive=1`;
   const res = await axios.get(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -46,16 +46,31 @@ export class GithubService {
   return result;
   }
 
-  async fetchFileContent(owner: string, repo: string, token: string,path:string) {
-  const url = `${process.env.GITHUB_API_BASE_URL}/repos/${owner}/${repo}/content/${path}`;
-  const res = await axios.get(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const result=Buffer.from(res.data.content, "base64").toString("utf-8");
-  return result;
-  }
+async fetchFileContent(
+  repo: string,
+  path: string,
+  token: string,
+  branch: string
+) {
+  try {
+    const url = `${process.env.GITHUB_API_BASE_URL}/repos/${repo}/contents/${path}?ref=${branch}`;
 
+    const res = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.data.content) {
+      throw new Error("No content found");
+    }
+
+    return Buffer.from(res.data.content, "base64").toString("utf-8");
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message || error.message
+    );
+  }
+}
 
 }

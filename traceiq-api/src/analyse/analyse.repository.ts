@@ -12,8 +12,9 @@ export class AnalyseRepository implements IAnalyseRepository {
     this.analysisSummaryCollection = db.collection("analysis-summary");
   }
 
-  async findSummaryAnalysis(repoId: string,branchName: string) {
+  async findSummaryAnalysis(userId:string,repoId: string,branchName: string) {
     const filter = {
+      gitUserId: userId,
       githubRepoId: repoId,
       branchName,
       isActiverVersion: true,
@@ -41,4 +42,53 @@ export class AnalyseRepository implements IAnalyseRepository {
   async saveSummaryAnalysis(data: any) {
       await this.analysisSummaryCollection.insertOne(data);
   }
+
+  async archiveBranchAnalysis(
+  gitUserId: string,
+  githubRepoId: string,
+  branchName: string
+) {
+  await this.analysisCollection.updateMany(
+    {
+      gitUserId,
+      githubRepoId,
+      branchName,
+      isDeleted: false,
+      isActiveVersion: true,
+    },
+    {
+      $set: {
+        isDeleted: true,
+        isActiveVersion: false,
+        updatedAt: new Date(),
+        updatedBy: gitUserId,
+      },
+    }
+  );
+}
+
+async archiveSummaryAnalysis(
+  gitUserId: string,
+  githubRepoId: string,
+  branchName: string
+) {
+  await this.analysisSummaryCollection.updateMany(
+    {
+      gitUserId,
+      githubRepoId,
+      branchName,
+      isDeleted: false,
+      isActiveVersion: true,
+    },
+    {
+      $set: {
+        isDeleted: true,
+        isActiveVersion: false,
+        updatedAt: new Date(),
+        updatedBy: gitUserId,
+      },
+    }
+  );
+}
+
 }

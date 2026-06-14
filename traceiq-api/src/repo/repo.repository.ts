@@ -32,7 +32,7 @@ export class RepoRepository implements IRepoRepository {
     return result;
   }
 
-  async fetchRepo(userId: string,repoId:string): Promise<any> {
+  async fetchRepo(userId: string,repoId:string) {
     console.log("Fetching repos for user:", userId);
     const filter = {
       gitUserId: userId,
@@ -44,9 +44,12 @@ export class RepoRepository implements IRepoRepository {
       githubRepoId: 1,
       gitUserId: 1,
       fullName: 1,
-      branches:1
+      branches:1,
+      "owner.login": 1,
+      "owner.id": 1,
+      "owner.node_id": 1,
     }
-    const result= this.collection.find(filter,{projection});
+    const result= await this.collection.findOne(filter,{projection});
     return result;
   }
 
