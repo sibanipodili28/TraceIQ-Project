@@ -145,10 +145,8 @@ export class AnalyseService {
     branch
   );
 
-  // Save new summary
   await this.analyseRepository.saveSummaryAnalysis(mappedSummary);
 
-  // Update branch last analyzed SHA
   await this.repoRepository.updateLastAnalyzedSha(
     githubRepoId,
     branch,
