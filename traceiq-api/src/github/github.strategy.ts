@@ -12,7 +12,8 @@ export class GithubStrategy extends PassportStrategy(Strategy, "github") {
       callbackURL: process.env.GITHUB_CLIENT_CALLBACK_URL,
       scope: ["user", "repo"],
       prompt: 'login',
-    });
+    }
+  );
   }
 
   async validate(accessToken: string, _: string, profile: any) {
